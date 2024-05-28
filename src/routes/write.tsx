@@ -209,9 +209,12 @@ export default function PostForm() {
         </AttachFileButton> */}
         {/* <AttachFileInput id="file" type="file" accept="image/*" onChange={onFileChange} /> */}
         <Wrapper>
-            <SubmitBtn type="submit" value={
-                isLoading ? '게시글 작성중...' : '게시글 작성하기'
-                } />
+            {
+                id && userId === user?.uid && 
+                <SubmitBtn type="submit" value={
+                    isLoading ? '게시글 작성중...' : '게시글 작성하기'
+                    } />
+            }
         </Wrapper>
     </Form>
 }
