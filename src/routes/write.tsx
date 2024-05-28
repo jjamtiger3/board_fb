@@ -96,10 +96,12 @@ export default function PostForm() {
     const [isLoading, setLoading] = useState(false);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
+    const [userId, setUserId] = useState('');
     const [readOnly, setReadOnly] = useState(false);
     const [file, setFile] = useState<File|null>(null);
 
     const { id } = useParams();
+    const user = auth.currentUser;
 
     const onTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value);
@@ -135,7 +137,6 @@ export default function PostForm() {
 
     const onSubmit = async (e:React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const user = auth.currentUser;
         if (!validCheck()) {
             return;
         }
@@ -155,6 +156,7 @@ export default function PostForm() {
             } else {
                 const doc = await addDoc(collection(db, 'customer_data'), {
                     name, 
+                    userId: user?.uid,
                     title, 
                     content, 
                     regDate, 
@@ -189,6 +191,7 @@ export default function PostForm() {
                     const docData = docSnap.data();
                     setTitle(docData.title);
                     setContent(docData.content);
+                    setUserId(docData.userId);
                 }
             };
             fetchFormData();
@@ -225,13 +228,16 @@ export default function PostForm() {
         {/* <AttachFileInput id="file" type="file" accept="image/*" onChange={onFileChange} /> */}
         <Wrapper>
             {
-                readOnly ? 
+                userId == user?.uid && id ? 
                     <Button onClick={() => setReadOnly(false)}>
                         {isLoading ? '게시글 수정중...' : '게시글 수정하기'}
-                    </Button> : 
-                    <SubmitBtn type="submit" value={
-                        isLoading ? '게시글 작성중...' : '게시글 작성하기'
-                        } />
+                    </Button> : null
+            }
+            {
+                !id && 
+                <SubmitBtn type="submit" value={
+                    isLoading ? '게시글 작성중...' : '게시글 작성하기'
+                    } />
             }
         </Wrapper>
     </Form>

@@ -59,9 +59,10 @@ export default function List() {
           );
           unsubscribe = await onSnapshot(customerQuery, (snapshot) => {
             const listData = snapshot.docs.map((doc) => {
-              const { name, title, content, regDate, modifiedDate } = doc.data();
+              const { name, userId, title, content, regDate, modifiedDate } = doc.data();
               return {
                 name, 
+                userId,
                 title, 
                 content, 
                 regDate, 
@@ -92,7 +93,7 @@ export default function List() {
                 <tbody>
                     {
                         data.map((_data: ICustomerData, index) => (
-                            <Row key={_data.id} onClick={() => handleRowClick(_data.id)}>
+                            <Row key={_data.id} onClick={() => handleRowClick(_data.id || '')}>
                                 <Cell>
                                     {
                                         // 순번컬럼 구현
