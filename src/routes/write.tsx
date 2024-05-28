@@ -63,20 +63,6 @@ const AttachFileButton = styled.label`
 const AttachFileInput = styled.input`
     display: none;
 `;
-const Button = styled.button`
-    background-color: #1d9bf9;
-    color: white;
-    border: none;
-    padding: 10px 0;
-    border-radius: 20px;
-    font-size: 16px;
-    cursor: pointer;
-    width: 200px;
-    float: right;
-    &:hover, &:active {
-        opacity: 0.9;
-    }
-`;
 const SubmitBtn = styled.input`
     background-color: #1d9bf9;
     color: white;
@@ -97,7 +83,6 @@ export default function PostForm() {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [userId, setUserId] = useState('');
-    const [readOnly, setReadOnly] = useState(false);
     const [file, setFile] = useState<File|null>(null);
 
     const { id } = useParams();
@@ -183,7 +168,6 @@ export default function PostForm() {
 
     useEffect(() => {
         if (id) {
-            setReadOnly(true);
             const fetchFormData = async () => {
                 const docRef = doc(db, 'customer_data', id);
                 const docSnap = await getDoc(docRef);
@@ -206,7 +190,6 @@ export default function PostForm() {
             required
             placeholder="제목을 입력해주세요" 
             value={title} 
-            readOnly={readOnly}
             onChange={onTitleChange} 
         />
         <TextArea 
@@ -215,7 +198,6 @@ export default function PostForm() {
             required
             placeholder="내용을 입력해주세요" 
             value={content} 
-            readOnly={readOnly}
             onChange={onContentChange} 
         />
         {/* <AttachFileButton htmlFor="file">
@@ -227,18 +209,9 @@ export default function PostForm() {
         </AttachFileButton> */}
         {/* <AttachFileInput id="file" type="file" accept="image/*" onChange={onFileChange} /> */}
         <Wrapper>
-            {
-                userId == user?.uid && id ? 
-                    <Button onClick={() => setReadOnly(false)}>
-                        {isLoading ? '게시글 수정중...' : '게시글 수정하기'}
-                    </Button> : null
-            }
-            {
-                !id && 
-                <SubmitBtn type="submit" value={
-                    isLoading ? '게시글 작성중...' : '게시글 작성하기'
-                    } />
-            }
+            <SubmitBtn type="submit" value={
+                isLoading ? '게시글 작성중...' : '게시글 작성하기'
+                } />
         </Wrapper>
     </Form>
 }

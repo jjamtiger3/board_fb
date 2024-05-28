@@ -7,6 +7,9 @@ import CreateAccount from "./routes/create-account";
 import List from "./routes/list";
 import Write from "./routes/write";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import { useEffect, useState } from "react";
+import { auth } from "./firebase";
+import LoadingScreen from "./components/loading-screen";
 
 
 const router = createBrowserRouter([
@@ -56,10 +59,21 @@ const Wrapper = styled.div`
 `;
 
 function App() {
+  const [isLoading, setLoading] = useState(true);
+  const init = async() => {
+    await auth.authStateReady();
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    init();
+  }, []);
   return (
     <Wrapper>
       <GlobalStyles />
-      <RouterProvider router={router} />
+      {
+        isLoading ? <LoadingScreen /> : <RouterProvider router={router} />
+      }
     </Wrapper>
   )
 }
