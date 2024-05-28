@@ -6,11 +6,13 @@ import styled, { createGlobalStyle } from "styled-components";
 import CreateAccount from "./routes/create-account";
 import List from "./routes/list";
 import Write from "./routes/write";
+import ProtectedRoute from "./routes/ProtectedRoute";
+
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: <ProtectedRoute><Layout /></ProtectedRoute>,
     children: [
       {
         path: '',
