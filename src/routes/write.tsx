@@ -2,7 +2,7 @@ import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc,
 import React, { useEffect, useState } from "react";
 import styled from "styled-components"
 import { auth, db, storage } from "../firebase";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { UploadResult, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useParams } from 'react-router-dom';
 
 const Wrapper = styled.div`
@@ -51,7 +51,9 @@ const TextArea = styled.textarea`
     }
 `;
 const AttachFileButton = styled.label`
+    width: 200px;
     padding: 10px 0;
+    margin-right: 20px;
     color: #1d9bf9;
     text-align: center;
     border-radius: 20px;
@@ -72,10 +74,14 @@ const SubmitBtn = styled.input`
     font-size: 16px;
     cursor: pointer;
     width: 200px;
-    float: right;
     &:hover, &:active {
         opacity: 0.9;
     }
+`;
+const Image = styled.img`
+    width: 200px;
+    height: auto;
+    border-radius: 15px;
 `;
 
 export default function PostForm() {
@@ -83,10 +89,12 @@ export default function PostForm() {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [userId, setUserId] = useState('');
-    const [file, setFile] = useState<File|null>(null);
+    const [readOnly, setReadOnly] = useState(false);
+    const [file, setFile] = useState<File | null>(null);
+    const [imagePath, setImagePath] = useState('');
 
     const { id } = useParams();
-    const user = auth.currentUser;
+    const user = auth.currentUser || null;
 
     const onTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value);
@@ -96,10 +104,14 @@ export default function PostForm() {
         setContent(e.target.value);
     }
 
-    const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const { files } = e?.target;
-        if (files && files.length === 1) {
-            setFile(files[0]);
+        if (files && files.length > 0) {
+            const file = files[0];
+            setFile(file);
+            const docRef = doc(db, 'customer_data', id);
+            const imagePath = await uploadFiles(file, docRef.id);
+            setImagePath(imagePath);
         }
     }
 
@@ -120,6 +132,14 @@ export default function PostForm() {
         return true;
     }
 
+    const uploadFiles = async (file: File, docId: string) => {
+        const locationRef = ref(storage, `list/${user?.uid}-${user?.displayName}/${docId}`);
+        // 각 파일을 업로드하고 해당 Promise를 배열에 저장
+        const uploadResult = await uploadBytes(locationRef, file);
+        const downloadUrl =  await getDownloadURL(uploadResult.ref);
+        return downloadUrl;
+    };
+
     const onSubmit = async (e:React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!validCheck()) {
@@ -132,20 +152,21 @@ export default function PostForm() {
             const name = user?.displayName;
             if (id) {
                 const docRef = doc(db, 'customer_data', id);
+                let imagePath;
                 await updateDoc(docRef, {
                     title, 
                     content, 
-                    // regDate, 
                     modifiedDate: regDate,
+                    imagePath
                 });
             } else {
-                const doc = await addDoc(collection(db, 'customer_data'), {
+                await addDoc(collection(db, 'customer_data'), {
                     name, 
                     userId: user?.uid,
                     title, 
                     content, 
                     regDate, 
-                    // modifiedDate,
+                    imagePath
                 });
             }
             // if (file) {
@@ -176,6 +197,8 @@ export default function PostForm() {
                     setTitle(docData.title);
                     setContent(docData.content);
                     setUserId(docData.userId);
+                    setReadOnly(docData.userId !== auth.currentUser?.uid);
+                    setImagePath(docData.imagePath);
                 }
             };
             fetchFormData();
@@ -190,6 +213,7 @@ export default function PostForm() {
             required
             placeholder="제목을 입력해주세요" 
             value={title} 
+            readOnly={readOnly}
             onChange={onTitleChange} 
         />
         <TextArea 
@@ -198,23 +222,22 @@ export default function PostForm() {
             required
             placeholder="내용을 입력해주세요" 
             value={content} 
+            readOnly={readOnly}
             onChange={onContentChange} 
         />
-        {/* <AttachFileButton htmlFor="file">
-            {
-                isEdit ?  
-                    (file ? 'Photo updated ✅' : 'Update Photo') : 
-                    (file ? "Photo added ✅" : "Add photo")
-            }
-        </AttachFileButton> */}
-        {/* <AttachFileInput id="file" type="file" accept="image/*" onChange={onFileChange} /> */}
-        <Wrapper>
-            {
-                id && userId === user?.uid && 
-                <SubmitBtn type="submit" value={
-                    isLoading ? '게시글 작성중...' : '게시글 작성하기'
-                    } />
-            }
-        </Wrapper>
+        {
+            ((id && userId === user?.uid) || !id) && 
+                <Wrapper>
+                    <AttachFileButton htmlFor="file">파일첨부</AttachFileButton>
+                    <AttachFileInput id="file" type="file" accept="image/*" onChange={onFileChange} />
+                        <SubmitBtn type="submit" value={
+                            isLoading ? '게시글 작성중...' : '게시글 작성하기'
+                        } />
+                </Wrapper>
+        }
+        {
+            imagePath &&
+                <Image src={imagePath} />
+        }
     </Form>
 }
