@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { ICustomerData } from "../interfaces/ICustomerData";
 import { Unsubscribe } from "firebase/auth";
-import { collection, onSnapshot, orderBy, query, limit, startAt, startAfter } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query, limit } from "firebase/firestore";
 import { db } from "../firebase";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";

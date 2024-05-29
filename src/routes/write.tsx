@@ -1,8 +1,8 @@
-import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, updateDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components"
 import { auth, db, storage } from "../firebase";
-import { UploadResult, getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useParams } from 'react-router-dom';
 
 const Wrapper = styled.div`
