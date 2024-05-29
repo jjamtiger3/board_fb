@@ -109,9 +109,12 @@ export default function PostForm() {
         if (files && files.length > 0) {
             const file = files[0];
             setFile(file);
-            const docRef = doc(db, 'customer_data', id);
-            const imagePath = await uploadFiles(file, docRef.id);
-            setImagePath(imagePath);
+            if (id) {
+                uploadFiles(file, id);
+            } else {
+                const imageUrl = URL.createObjectURL(file);
+                setImagePath(imageUrl);
+            }
         }
     }
 
@@ -137,7 +140,7 @@ export default function PostForm() {
         // 각 파일을 업로드하고 해당 Promise를 배열에 저장
         const uploadResult = await uploadBytes(locationRef, file);
         const downloadUrl =  await getDownloadURL(uploadResult.ref);
-        return downloadUrl;
+        setImagePath(downloadUrl);
     };
 
     const onSubmit = async (e:React.ChangeEvent<HTMLFormElement>) => {
@@ -152,7 +155,6 @@ export default function PostForm() {
             const name = user?.displayName;
             if (id) {
                 const docRef = doc(db, 'customer_data', id);
-                let imagePath;
                 await updateDoc(docRef, {
                     title, 
                     content, 
@@ -160,7 +162,7 @@ export default function PostForm() {
                     imagePath
                 });
             } else {
-                await addDoc(collection(db, 'customer_data'), {
+                const doc = await addDoc(collection(db, 'customer_data'), {
                     name, 
                     userId: user?.uid,
                     title, 
@@ -168,17 +170,15 @@ export default function PostForm() {
                     regDate, 
                     imagePath
                 });
+                if (file) {
+                    const locationRef = ref(storage, `list/${user?.uid}-${user?.displayName}/${doc.id}`);
+                    const result = await uploadBytes(locationRef, file);
+                    const imagePath = await getDownloadURL(result.ref);
+                    await updateDoc(doc, {
+                        imagePath,
+                    });
+                }
             }
-            // if (file) {
-            //     const locationRef = ref(storage, `tweet/${user.uid}-${user.displayName}/${doc.id}`);
-            //     const result = await uploadBytes(locationRef, file);
-            //     const photoUrl = await getDownloadURL(result.ref);
-            //     await updateDoc(doc, {
-            //         photo: photoUrl,
-            //     });
-            //     setTweet('');
-            //     setFile(null);
-            // }
         } catch (err) {
             console.log(err);
         } finally {
