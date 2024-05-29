@@ -92,7 +92,7 @@ export default function List() {
                 </thead>
                 <tbody>
                     {
-                        data.map((_data: ICustomerData, index) => (
+                        data.map((_data: ICustomerData) => (
                             <Row key={_data.id} onClick={() => handleRowClick(_data.id || '')}>
                                 <Cell>
                                     {
